@@ -224,21 +224,13 @@ respectively.
 * Clone the repository beneath your `GOPATH`:
 
 ```bash
-mkdir $GOPATH/src/bitbucket.org/parqueryopen
-cd $GOPATH/src/bitbucket.org/parqueryopen
-git clone git clone git@bitbucket.org:parqueryopen/revproxyry.git
+go get bitbucket.org/parqueryopen/revproxyry
 ```
 
 * Change to the _revproxyry_ directory:
 
 ```bash
 cd $GOPATH/src/bitbucket.org/parqueryopen/revproxyry
-```
-
-* Get all the dependencies:
-
-```bash
-go get ./...
 ```
 
 * If you want to build everything in the project:
@@ -252,3 +244,5 @@ go build ./...
 ```bash
 go install ./...
 ```
+
+* Create a pull request and send it for review `:)`
