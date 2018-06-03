@@ -36,6 +36,19 @@ Let's encrypt.
 
 ## Installation
 
+### Pre-compiled Binaries
+
+We provide the following pre-compiled binaries:
+
+Version|Arch|Release
+---|---|---
+1.0.0|Linux x64|[revproxyry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.0-linux-x64.tar.gz) |Linux x64
+
+To install the release, just unpack it somewhere, add `bin/` directory to 
+your `PATH` and you are ready to go.
+
+### From Source
+
 Assuming you have a working Go environment, you can install the _revproxyry_
 from the source by running:
 
