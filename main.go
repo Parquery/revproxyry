@@ -428,7 +428,15 @@ func run() int {
 
 	a.quiet = flag.Bool("quiet", false, "If set, outputs as little messages as possible")
 
+	version := flag.Bool("version", false,
+		"If set, outputs only the version to the standard output and exits immediately")
+
 	flag.Parse()
+
+	if *version {
+		fmt.Println("1.0.0")
+		return 0
+	}
 
 	var logOut *log.Logger
 	if *a.quiet {
