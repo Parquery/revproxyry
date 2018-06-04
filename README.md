@@ -34,6 +34,13 @@ provided all the ingredients we needed: a simple handler for reverse
 proxying and an easy to use ACME client needed for the communication with
 Let's encrypt.
 
+## Related Projects
+
+* [nginx-proxy](https://github.com/jwilder/nginx-proxy) with 
+[lets encrypt companion](https://github.com/JrCs/docker-letsencrypt-nginx-proxy-companion)
+provides a docker-based solution. We find the configuration of these two 
+modules still a bit too complex for our taste. 
+
 ## Installation
 
 ### Pre-compiled Binaries
