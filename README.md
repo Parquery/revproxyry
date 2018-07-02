@@ -45,11 +45,12 @@ modules still a bit too complex for our taste.
 
 ### Pre-compiled Binaries
 
-We provide the following pre-compiled binaries:
+We provide the following pre-compiled binaries of the revproxyry and the utility to generate
+bcrypt password hashes:
 
 Version|Arch|Release
 ---|---|---
-1.0.0|Linux x64|[revproxyry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.0-linux-x64.tar.gz) |Linux x64
+1.0.0|Linux x64|[revproxyry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.0-linux-x64.tar.gz), [revproxyhashry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyhashry-1.0.0-linux-x64.tar.gz)
 
 To install the release, just unpack it somewhere, add `bin/` directory to 
 your `PATH` and you are ready to go.
@@ -60,7 +61,7 @@ We also provide a Debian package:
 
 Version|Arch|Release
 ---|---|---
-1.0.0|amd64|[revproxyry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.0_amd64.deb)
+1.0.0|amd64|[revproxyry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.0_amd64.deb), [revproxyhashry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyhashry_1.0.0_amd64.deb)
 
 For example, to download the package and install it, call:
 
