@@ -57,10 +57,13 @@ func newAuth(username string, passwordHash string) (a *Auth, err error) {
 	return
 }
 
-// Auths represents an authentication registry. Each authentication is mapped {authentication ID} -> authentication.
+// Auths represents an authentication registry.
 type Auths struct {
-	registry map[string]*Auth
-	All      bool // if All is true, everybody is granted access.
+	// authentication registry maps user name -> list of authentications for this user.
+	registry map[string][]*Auth
+
+	// All indicates whether everybody is granted access.
+	All      bool
 }
 
 // New creates a new authentication registry.
@@ -87,15 +90,18 @@ func New(cfgAuths map[string]*config.Auth) (auths *Auths, err error) {
 		}
 	}
 
-	auths.registry = make(map[string]*Auth)
+	auths.registry = make(map[string][]*Auth)
 
 	for id, cfgAuth := range cfgAuths {
-		auths.registry[id], err = newAuth(cfgAuth.Username, cfgAuth.PasswordHash)
+		var auth *Auth
+		auth, err = newAuth(cfgAuth.Username, cfgAuth.PasswordHash)
 		if err != nil {
 			err = fmt.Errorf("failed to create an authentication from the configuration of an auth %s: %s",
 				id, err.Error())
 			return
 		}
+
+		auths.registry[cfgAuth.Username] = append(auths.registry[cfgAuth.Username], auth)
 	}
 
 	return
@@ -113,41 +119,45 @@ func (aa *Auths) Authenticate(username string, password string) (ok bool, msg st
 		return
 	}
 
-	a, hasUsername := aa.registry[username]
+	authLst, hasUsername := aa.registry[username]
 	if !hasUsername {
-		msg = fmt.Sprintf("unknown user name: %s", username)
+		msg = fmt.Sprintf("unknown user name")
 		return
 	}
 
-	switch a.hashing {
-	case Apr1MD5:
-		if a.md5.MatchesPassword(password) {
-			ok = true
-			return
-		}
+	for _, a := range authLst {
+		switch a.hashing {
+		case Apr1MD5:
+			if a.md5.MatchesPassword(password) {
+				ok = true
+				return
+			}
 
-		msg = "invalid password"
-		return
-
-	case Bcrypt:
-		err = bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password))
-		switch {
-		case err == nil:
-			ok = true
-			return
-
-		case err == bcrypt.ErrMismatchedHashAndPassword:
-			// We need to void the error, since we set the message separately, and this case indicates that there was actually no authentication error.
-			err = nil
-			ok = false
 			msg = "invalid password"
 			return
 
-		default:
-			return
-		}
+		case Bcrypt:
+			err = bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(password))
+			switch {
+			case err == nil:
+				ok = true
+				return
 
-	default:
-		panic(fmt.Sprintf("unhandled case: %d", a.hashing))
+			case err == bcrypt.ErrMismatchedHashAndPassword:
+				// We need to void the error, since we set the message separately, and this case indicates that there was actually no authentication error.
+				err = nil
+				ok = false
+				msg = "invalid password"
+				return
+
+			default:
+				return
+			}
+
+		default:
+			panic(fmt.Sprintf("unhandled case: %d", a.hashing))
+		}
 	}
+
+	return
 }

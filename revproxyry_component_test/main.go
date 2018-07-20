@@ -147,11 +147,11 @@ func testApr1MD5(revproxyBinary string) error {
     {
       "prefix": "/o/",
       "target": "%s",
-      "auths": ["some-user"]
+      "auths": ["some-auth"]
     }
   ],
   "auths": {
-    "some-user": {
+    "some-auth": {
       "username": "some-user",
       "password_hash": "$apr1$cVKAnC1K$wWAv8sB0n8iKuFkhaMI0a."
     }
@@ -261,11 +261,11 @@ func testBcryptRevproxyhashry(revproxyBinary string) error {
     {
       "prefix": "/o/",
       "target": "%s",
-      "auths": ["some-user"]
+      "auths": ["some-auth"]
     }
   ],
   "auths": {
-    "some-user": {
+    "some-auth": {
       "username": "some-user",
       "password_hash": "$2a$12$IufPB.BMcVdI6UN1Lu/nrOaTTWBJvvaZoHhPRmno5OrbY6L8wKpWO"
     }
@@ -376,7 +376,7 @@ func testBcryptHtpasswd(revproxyBinary string) error {
     {
       "prefix": "/o/",
       "target": "%s",
-      "auths": ["some-user"]
+      "auths": ["some-auth"]
     }
   ],
   "auths": {
