@@ -1,8 +1,9 @@
-package main
+package config
 
 import "fmt"
 
-type auth struct {
+// Auth represents an authentication by a tuple (username, password hash).
+type Auth struct {
 	/* user name to authenticate. If empty, no authentication */
 	Username string `json:"username"`
 
@@ -10,21 +11,25 @@ type auth struct {
 	PasswordHash string `json:"password_hash"`
 }
 
-type route struct {
-	/* route prefix */
+// Route represents a route of a reverse proxy.
+type Route struct {
+	/* Route prefix */
 	Prefix string `json:"prefix"`
 
-	/* path to the target;
-	if a directory, everything beneath it will be served beneath the prefix.
-	If an URL, redirects to that URL after stripping the prefix */
+	/*
+	path to the target.
+	If a directory, everything beneath it will be served beneath the prefix.
+	If an URL, redirects to that URL after stripping the prefix.
+	*/
 	Target  string   `json:"target"`
 	AuthIDs []string `json:"auths"`
 }
 
-type config struct {
-	Auths          map[string]*auth `json:"auths"`
+// Config represents a parsed config JSON file.
+type Config struct {
+	Auths          map[string]*Auth `json:"auths"`
 	Domain         string           `json:"domain"`
-	Routes         []route          `json:"routes"`
+	Routes         []Route          `json:"routes"`
 	SslKeyPath     string           `json:"ssl_key_path"`
 	SslCertPath    string           `json:"ssl_cert_path"`
 	LetsencryptDir string           `json:"letsencrypt_dir"`
@@ -32,14 +37,15 @@ type config struct {
 	HttpsAddress   string           `json:"https_address"`
 }
 
-func validate(cfg *config) error {
+// Validate validates the parsed config.
+func Validate(cfg *Config) error {
 	for _, route := range cfg.Routes {
 		for _, authID := range route.AuthIDs {
 			_, ok := cfg.Auths[authID]
 
 			if !ok {
 				return fmt.Errorf(
-					"auth could not be found in the list of auths for the route with prefix %s: %#v",
+					"Auth could not be found in the list of auths for the Route with prefix %s: %#v",
 					route.Prefix, authID)
 			}
 		}
