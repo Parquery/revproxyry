@@ -23,6 +23,8 @@ import (
 	htbasicauth "github.com/jimstudt/http-authentication/basic"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/crypto/bcrypt"
+
+	"bitbucket.org/parqueryopen/revproxyry/config"
 )
 
 type logWriter struct {
@@ -36,7 +38,7 @@ func (lw *logWriter) Write(bytes []byte) (int, error) {
 	return lw.out.Write([]byte(msg))
 }
 
-func loadConfig(path string) (cfg *config, err error) {
+func loadConfig(path string) (cfg *config.Config, err error) {
 	f, err := os.Open(path)
 	defer f.Close()
 
@@ -45,13 +47,13 @@ func loadConfig(path string) (cfg *config, err error) {
 		return
 	}
 
-	cfg = &config{}
+	cfg = &config.Config{}
 	err = json.Unmarshal(text, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validate(cfg)
+	err = config.Validate(cfg)
 	if err != nil {
 		return
 	}
@@ -155,7 +157,7 @@ func (h *loggingHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 type authHandler struct {
-	auths   []*auth
+	auths   []*config.Auth
 	logErr  *log.Logger
 	handler http.Handler
 }
@@ -164,7 +166,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	username, passw, ok := req.BasicAuth()
 	if !ok {
 		msg := newMessage(req)
-		msg.Error = "no auth"
+		msg.Error = "no Auth"
 		msg.StatusCode = http.StatusUnauthorized
 
 		bb, err := json.Marshal(&msg)
@@ -177,7 +179,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.logErr.Printf("%s\n", string(bb))
 
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "No basic auth provided", http.StatusUnauthorized)
+		http.Error(w, "No basic Auth provided", http.StatusUnauthorized)
 		return
 	}
 
@@ -211,7 +213,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if !ok {
 		msg := newMessage(req)
-		msg.Error = fmt.Sprintf("auth not accepted (user: %s)", username)
+		msg.Error = fmt.Sprintf("Auth not accepted (user: %s)", username)
 		msg.StatusCode = http.StatusUnauthorized
 
 		bb, err := json.Marshal(&msg)
@@ -224,7 +226,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.logErr.Printf("%s\n", string(bb))
 
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "Provided basic auth not accepted", http.StatusUnauthorized)
+		http.Error(w, "Provided basic Auth not accepted", http.StatusUnauthorized)
 
 		return
 	}
@@ -237,7 +239,7 @@ type args struct {
 	quiet        *bool
 }
 
-func setupRouter(cfg *config, logOut *log.Logger, logErr *log.Logger) (http.Handler, error) {
+func setupRouter(cfg *config.Config, logOut *log.Logger, logErr *log.Logger) (http.Handler, error) {
 
 	router := http.NewServeMux()
 
@@ -259,7 +261,7 @@ func setupRouter(cfg *config, logOut *log.Logger, logErr *log.Logger) (http.Hand
 			handler = httputil.NewSingleHostReverseProxy(parsedURL)
 
 		default:
-			return nil, fmt.Errorf("does not know how to handle the route: %s", route.Target)
+			return nil, fmt.Errorf("does not know how to handle the Route: %s", route.Target)
 		}
 
 		handler = &loggingHandler{
@@ -269,7 +271,7 @@ func setupRouter(cfg *config, logOut *log.Logger, logErr *log.Logger) (http.Hand
 			target:  route.Target,
 			handler: handler}
 
-		auths := []*auth{}
+		auths := []*config.Auth{}
 		needsAuth := false
 		for _, authID := range route.AuthIDs {
 			auth := cfg.Auths[authID]
@@ -344,7 +346,7 @@ func setupRedirectionRouter(httpsAddr string, logOut *log.Logger, logErr *log.Lo
 }
 
 func setupServers(
-	cfg *config, logOut *log.Logger, logErr *log.Logger) (httpd *http.Server, httpsd *http.Server, err error) {
+	cfg *config.Config, logOut *log.Logger, logErr *log.Logger) (httpd *http.Server, httpsd *http.Server, err error) {
 
 	// set up a router
 	router, err := setupRouter(cfg, logOut, logErr)
@@ -463,7 +465,7 @@ func run() int {
 		return 1
 	}
 
-	err = validate(revproxy)
+	err = config.Validate(revproxy)
 	if err != nil {
 		logErr.Printf("Validation of arguments and the revproxy specification failed: %s\n", err.Error())
 		return 1
@@ -476,7 +478,7 @@ func run() int {
 	}
 
 	failures := int32(0)  // atomic variable, increased on failures to start one of the servers
-	var wg sync.WaitGroup // synchronizes printing of route tables
+	var wg sync.WaitGroup // synchronizes printing of Route tables
 
 	wg.Add(1)
 	go func() {
