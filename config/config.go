@@ -1,6 +1,11 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"io/ioutil"
+	"encoding/json"
+)
 
 // Auth represents an authentication by a tuple (username, password hash).
 type Auth struct {
@@ -78,4 +83,31 @@ func Validate(cfg *Config) error {
 	}
 
 	return nil
+}
+
+// Load loads and parses the config file from the given path.
+func Load(path string) (cfg *Config, err error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	text, err := ioutil.ReadAll(f)
+	if err != nil {
+		return
+	}
+
+	cfg = &Config{}
+	err = json.Unmarshal(text, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = Validate(cfg)
+	if err != nil {
+		return
+	}
+
+	return
 }
