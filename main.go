@@ -20,12 +20,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	htbasicauth "github.com/jimstudt/http-authentication/basic"
 	"golang.org/x/crypto/acme/autocert"
-	"golang.org/x/crypto/bcrypt"
-
 	"bitbucket.org/parqueryopen/revproxyry/config"
 	"bitbucket.org/parqueryopen/revproxyry/sigterm"
+	"bitbucket.org/parqueryopen/revproxyry/auth"
 )
 
 type logWriter struct {
@@ -135,7 +133,7 @@ func (h *loggingHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 type authHandler struct {
-	auths   []*config.Auth
+	auths   *auth.Auths
 	logErr  *log.Logger
 	handler http.Handler
 }
@@ -161,37 +159,19 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ok = false
-	for _, auth := range h.auths {
-		if username != auth.Username {
-			continue
-		}
-
-		md5, err := htbasicauth.AcceptMd5(auth.PasswordHash)
-		if err != nil {
-			h.logErr.Printf("Failed to parse the password hash: %#v: %s", auth.PasswordHash, err.Error())
-			continue
-		}
-
-		if md5 != nil {
-			if md5.MatchesPassword(passw) {
-				ok = true
-				break
-			}
-
-			continue
-		}
-
-		err = bcrypt.CompareHashAndPassword([]byte(auth.PasswordHash), []byte(passw))
-		if err == nil {
-			ok = true
-			break
-		}
+	var rejectionMsg string
+	var err error
+	ok, rejectionMsg, err = h.auths.Authenticate(username, passw)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to authenticate the user: %s", username),
+			http.StatusInternalServerError)
+		h.logErr.Printf("Failed to authenticate the user %s: %s", username, err.Error())
+		return
 	}
 
 	if !ok {
 		msg := newMessage(req)
-		msg.Error = fmt.Sprintf("Auth not accepted (user: %s)", username)
+		msg.Error = fmt.Sprintf("Auth not accepted for the user %s: %s", username, rejectionMsg)
 		msg.StatusCode = http.StatusUnauthorized
 
 		bb, err := json.Marshal(&msg)
@@ -249,17 +229,17 @@ func setupRouter(cfg *config.Config, logOut *log.Logger, logErr *log.Logger) (ht
 			target:  route.Target,
 			handler: handler}
 
-		auths := []*config.Auth{}
-		needsAuth := false
+		authMap := make(map[string]*config.Auth)
 		for _, authID := range route.AuthIDs {
-			auth := cfg.Auths[authID]
-			if auth.Username != "" {
-				needsAuth = true
-			}
-			auths = append(auths, auth)
+			authMap[authID] = cfg.Auths[authID]
 		}
 
-		if needsAuth {
+		auths, err := auth.New(authMap)
+		if err != nil {
+			return nil, err
+		}
+
+		if !auths.All {
 			handler = &authHandler{
 				auths:   auths,
 				logErr:  logErr,

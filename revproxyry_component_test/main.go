@@ -121,8 +121,8 @@ func testListDir(revproxyBinary string) error {
 	return nil
 }
 
-func testMD5(revproxyBinary string) error {
-	fmt.Println("Running testMD5 ...")
+func testApr1MD5(revproxyBinary string) error {
+	fmt.Println("Running testApr1MD5 ...")
 
 	testDir, err := ioutil.TempDir("", "")
 	if err != nil {
@@ -482,9 +482,9 @@ func run() int {
 		return 1
 	}
 
-	err = testMD5(*revproxyryBinary)
+	err = testApr1MD5(*revproxyryBinary)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "testMD5 failed: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "testApr1MD5 failed: %s\n", err.Error())
 		return 1
 	}
 
