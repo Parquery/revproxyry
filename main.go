@@ -25,6 +25,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"bitbucket.org/parqueryopen/revproxyry/config"
+	"bitbucket.org/parqueryopen/revproxyry/sigterm"
 )
 
 type logWriter struct {
@@ -510,12 +511,12 @@ func run() int {
 		}()
 	}
 
-	RegisterSIGTERMHandler()
+	sigterm.RegisterSIGTERMHandler()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for !ReceivedSIGTERM() && atomic.LoadInt32(&failures) == 0 {
+		for !sigterm.ReceivedSIGTERM() && atomic.LoadInt32(&failures) == 0 {
 			time.Sleep(time.Second)
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
