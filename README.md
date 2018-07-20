@@ -45,12 +45,11 @@ modules still a bit too complex for our taste.
 
 ### Pre-compiled Binaries
 
-We provide the following pre-compiled binaries of the revproxyry and the utility to generate
-bcrypt password hashes:
+We provide the following pre-compiled binaries of the revproxyry:
 
 Version|Arch|Release
 ---|---|---
-1.0.0|Linux x64|[revproxyry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.0-linux-x64.tar.gz), [revproxyhashry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyhashry-1.0.0-linux-x64.tar.gz)
+1.0.0|Linux x64|[revproxyry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.0-linux-x64.tar.gz)
 
 To install the release, just unpack it somewhere, add `bin/` directory to 
 your `PATH` and you are ready to go.
@@ -61,7 +60,7 @@ We also provide a Debian package:
 
 Version|Arch|Release
 ---|---|---
-1.0.0|amd64|[revproxyry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.0_amd64.deb), [revproxyhashry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyhashry_1.0.0_amd64.deb)
+1.0.0|amd64|[revproxyry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.0_amd64.deb)
 
 For example, to download the package and install it, call:
 
@@ -77,13 +76,6 @@ from the source by running:
 
 ```bash
 go get -U bitbucket.org/parqueryopen/revproxyry
-```
-
-If you also want to download and build the hashing utility to generate the 
-bcrypt hashes:
-
-```bash
-go get -U bitbucket.org/parqueryopen/revproxyry/revproxyhashry
 ```
 
 ## Usage
@@ -105,21 +97,10 @@ revproxyry \
 
 To terminate _revproxyry_, send SIGTERM to the process.
 
-To generate a password hash, run:
-
-```bash
-revproxyhashry
-```
-
-You will be asked for the password on the prompt. If you do not mind 
-deleting the shell history, you can also provide the password in the 
-command:
-
-```bash
-revproxyhashry your-secret-password
-```
-
-_Revproxyhashry_ will print the password hash to the standard output.
+You can generate the password hashes either by using 
+[revproxyhashry](https://bitbucket.org/parqueryopen/revproxyhashry), 
+a hashing tool developed by us with a very simple interface in mind, or a more complex Apache's 
+[htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html).
 
 ### Configuration
 
@@ -159,10 +140,11 @@ detailed list of the configuration properties:
   Each authorization is identified by its key in `auths` and specifies:
   
   * `username`: of the authorized user
-  * `password_hash`: either Apache `htpasswd` MD5 hash or bcrypt hash.
+  * `password_hash`: either Apr1 MD5 hash or bcrypt hash.
   
-    You can generate bcrypt hashes with the provided utility 
-    _revproxyhashry_.  
+    You can generate hashes either with 
+    [revproxyhashry](https://bitbucket.org/parqueryopen/revproxyhashry) or with Apache's 
+    [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html).  
     
     If the `username` is empty, everybody is authorized.
   
@@ -198,8 +180,10 @@ proxy to use Let's encrypt and authorizes two users, `somebody` and
 `somebody_else` to access different routes to local directories and 
 URLs. 
 
-The password of the user `somebody` was generated using Apache htpasswd and the
-password of the user `somebody_else` was generated using _revproxyhashry_,
+The password of the user `somebody` was generated using Apache's 
+[htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html) and the
+password of the user `somebody_else` was generated using 
+[revproxyhashry](https://bitbucket.org/parqueryopen/revproxyhashry),
 respectively.
 
 ```json
@@ -217,7 +201,7 @@ respectively.
     },
     "somebody": {
       "username": "somebody",
-      "password_hash": "somebody:$apr1$TBUT11YV$MKTEAeq9GU731f4ZanSuE/"
+      "password_hash": "$apr1$TBUT11YV$MKTEAeq9GU731f4ZanSuE/"
     },
     "somebody_else": {
       "username": "somebody_else",
