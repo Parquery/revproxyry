@@ -39,29 +39,6 @@ func (lw *logWriter) Write(bytes []byte) (int, error) {
 	return lw.out.Write([]byte(msg))
 }
 
-func loadConfig(path string) (cfg *config.Config, err error) {
-	f, err := os.Open(path)
-	defer f.Close()
-
-	text, err := ioutil.ReadAll(f)
-	if err != nil {
-		return
-	}
-
-	cfg = &config.Config{}
-	err = json.Unmarshal(text, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	err = config.Validate(cfg)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 type fileServer struct {
 	root   http.Dir
 	logErr *log.Logger
@@ -460,9 +437,9 @@ func run() int {
 
 	var err error
 
-	revproxy, err := loadConfig(*a.revproxyPath)
+	revproxy, err := config.Load(*a.revproxyPath)
 	if err != nil {
-		logErr.Printf("Failed to load the revproxy from: %s\n", err.Error())
+		logErr.Printf("Failed to load the revproxy config from: %s\n", err.Error())
 		return 1
 	}
 
