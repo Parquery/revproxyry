@@ -1,5 +1,8 @@
 # Changlog
 
+## 1.0.2
+* Authentication registry maps authentications by user name instead of authentication ID.
+
 ## 1.0.1
 * Refactored revproxyhashry to a [separate repository](https://bitbucket.org/parqueryopen/revproxyhashry). 
 

@@ -394,7 +394,7 @@ func run() int {
 	flag.Parse()
 
 	if *version {
-		fmt.Println("1.0.1")
+		fmt.Println("1.0.2")
 		return 0
 	}
 
