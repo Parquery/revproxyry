@@ -71,7 +71,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp_dir:
         deb_package_dir = pathlib.Path(tmp_dir) / "revproxyry_{}_amd64".format(version)
 
-        target = bin_package_dir / "usr/bin/revproxyry".format(version)
+        target = deb_package_dir / "usr/bin/revproxyry".format(version)
         target.parent.mkdir(parents=True)
         shutil.copy(bin_path.as_posix(), target.as_posix())
 
