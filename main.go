@@ -21,9 +21,10 @@ import (
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
-	"bitbucket.org/parqueryopen/revproxyry/config"
-	"bitbucket.org/parqueryopen/revproxyry/sigterm"
-	"bitbucket.org/parqueryopen/revproxyry/auth"
+
+	"github.com/Parquery/revproxyry/config"
+	"github.com/Parquery/revproxyry/sigterm"
+	"github.com/Parquery/revproxyry/auth"
 )
 
 type logWriter struct {
