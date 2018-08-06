@@ -21,9 +21,10 @@ import (
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
-	"bitbucket.org/parqueryopen/revproxyry/config"
-	"bitbucket.org/parqueryopen/revproxyry/sigterm"
-	"bitbucket.org/parqueryopen/revproxyry/auth"
+
+	"github.com/Parquery/revproxyry/config"
+	"github.com/Parquery/revproxyry/sigterm"
+	"github.com/Parquery/revproxyry/auth"
 )
 
 type logWriter struct {
@@ -394,7 +395,7 @@ func run() int {
 	flag.Parse()
 
 	if *version {
-		fmt.Println("1.0.2")
+		fmt.Println("1.0.3")
 		return 0
 	}
 

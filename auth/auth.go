@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	htbasicauth "github.com/jimstudt/http-authentication/basic"
 
-	"bitbucket.org/parqueryopen/revproxyry/config"
+	"github.com/Parquery/revproxyry/config"
 )
 
 type hashing int

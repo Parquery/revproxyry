@@ -1,5 +1,8 @@
 # Changlog
 
+## 1.0.3
+* Moved to github.com
+
 ## 1.0.2
 * Authentication registry maps authentications by user name instead of authentication ID.
 
