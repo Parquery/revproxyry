@@ -45,30 +45,22 @@ modules still a bit too complex for our taste.
 
 ### Pre-compiled Binaries
 
-We provide the following pre-compiled binaries of the revproxyry:
-
-Version|Arch|Release
----|---|---
-1.0.0|Linux x64|[revproxyry-1.0.0-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.0-linux-x64.tar.gz)
-1.0.2|Linux x64|[revproxyry-1.0.2-linux-x64.tar.gz](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry-1.0.2-linux-x64.tar.gz)
+We provide the pre-compiled binaries of the revproxyry. Please see the 
+[release page](https://github.com/Parquery/revproxyry/releases).
 
 To install the release, just unpack it somewhere, add `bin/` directory to 
 your `PATH` and you are ready to go.
 
 ### Debian Packages
 
-We also provide a Debian package:
-
-Version|Arch|Release
----|---|---
-1.0.0|amd64|[revproxyry_1.0.0_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.0_amd64.deb)
-1.0.2|amd64|[revproxyry_1.0.2_amd64.deb](https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.2_amd64.deb)
+We also provide a Debian package. Please also see the 
+[release page](https://github.com/Parquery/revproxyry/releases).
 
 For example, to download the package and install it, call:
 
 ```bash
-wget https://bitbucket.org/parqueryopen/revproxyry/downloads/revproxyry_1.0.2_amd64.deb
-sudo dpkg -i revproxyry_1.0.2_amd64.deb
+wget https://github.com/Parquery/revproxyry/releases/download/v1.0.3//revproxyry_1.0.3_amd64.deb
+sudo dpkg -i revproxyry_1.0.3_amd64.deb
 ```
 
 ### Compile From Source
@@ -77,7 +69,7 @@ Assuming you have a working Go environment, you can install the _revproxyry_
 from the source by running:
 
 ```bash
-go get -U bitbucket.org/parqueryopen/revproxyry
+go get -U github.com/Parquery/revproxyry
 ```
 
 ## Usage
@@ -100,7 +92,7 @@ revproxyry \
 To terminate _revproxyry_, send SIGTERM to the process.
 
 You can generate the password hashes either by using 
-[revproxyhashry](https://bitbucket.org/parqueryopen/revproxyhashry), 
+[revproxyhashry](https://github.com/Parquery/revproxyhashry), 
 a hashing tool developed by us with a very simple interface in mind, or a more complex Apache's 
 [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html).
 
@@ -145,7 +137,7 @@ detailed list of the configuration properties:
   * `password_hash`: either Apr1 MD5 hash or bcrypt hash.
   
     You can generate hashes either with 
-    [revproxyhashry](https://bitbucket.org/parqueryopen/revproxyhashry) or with Apache's 
+    [revproxyhashry](https://github.com/Parquery/revproxyhashry) or with Apache's 
     [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html).  
     
     If the `username` is empty, everybody is authorized.
@@ -185,7 +177,7 @@ URLs.
 The password of the user `somebody` was generated using Apache's 
 [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html) and the
 password of the user `somebody_else` was generated using 
-[revproxyhashry](https://bitbucket.org/parqueryopen/revproxyhashry),
+[revproxyhashry](https://github.com/Parquery/revproxyhashry),
 respectively.
 
 ```json
@@ -246,13 +238,13 @@ respectively.
 * Clone the repository beneath your `GOPATH`:
 
 ```bash
-go get bitbucket.org/parqueryopen/revproxyry
+go get github.com/Parquery/revproxyry
 ```
 
 * Change to the _revproxyry_ directory:
 
 ```bash
-cd $GOPATH/src/bitbucket.org/parqueryopen/revproxyry
+cd $GOPATH/src/github.com/Parquery/revproxyry
 ```
 
 * If you want to build everything in the project:
