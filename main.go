@@ -420,7 +420,7 @@ func run() int {
 
 	revproxy, err := config.Load(*a.revproxyPath)
 	if err != nil {
-		logErr.Printf("Failed to load the revproxy config from: %s\n", err.Error())
+		logErr.Printf("Failed to load the revproxy config from %s: %s\n", *a.revproxyPath, err.Error())
 		return 1
 	}
 
