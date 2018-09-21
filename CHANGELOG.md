@@ -1,5 +1,8 @@
 # Changlog
 
+## 1.0.4
+* Added the path to the config in the config error message
+
 ## 1.0.3
 * Moved to github.com
 
