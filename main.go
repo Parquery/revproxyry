@@ -202,6 +202,8 @@ func setupRouter(cfg *config.Config, logOut *log.Logger, logErr *log.Logger) (ht
 
 	router := http.NewServeMux()
 
+	handledRoot := false
+
 	for _, route := range cfg.Routes {
 
 		parsedURL, _ := url.ParseRequestURI(route.Target)
@@ -248,25 +250,31 @@ func setupRouter(cfg *config.Config, logOut *log.Logger, logErr *log.Logger) (ht
 		}
 
 		router.Handle(route.Prefix, http.StripPrefix(route.Prefix, handler))
+
+		if route.Prefix == "/" {
+			handledRoot = true
+		}
 	}
 
-	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		msg := newMessage(req)
-		msg.Error = "not found"
-		msg.StatusCode = http.StatusNotFound
+	if !handledRoot{
+		router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+			msg := newMessage(req)
+			msg.Error = "not found"
+			msg.StatusCode = http.StatusNotFound
 
-		bb, err := json.Marshal(&msg)
-		if err != nil {
-			http.Error(w, "Failed to JSON-encode log message", http.StatusInternalServerError)
-			logErr.Printf("Failed to JSON-encode log message %#v: %s", msg, err.Error())
+			bb, err := json.Marshal(&msg)
+			if err != nil {
+				http.Error(w, "Failed to JSON-encode log message", http.StatusInternalServerError)
+				logErr.Printf("Failed to JSON-encode log message %#v: %s", msg, err.Error())
+				return
+			}
+
+			logErr.Printf("%s\n", string(bb))
+
+			http.Error(w, "Not found", http.StatusNotFound)
 			return
-		}
-
-		logErr.Printf("%s\n", string(bb))
-
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	})
+		})
+	}
 
 	return router, nil
 }
@@ -395,7 +403,7 @@ func run() int {
 	flag.Parse()
 
 	if *version {
-		fmt.Println("1.0.4")
+		fmt.Println("1.0.5")
 		return 0
 	}
 

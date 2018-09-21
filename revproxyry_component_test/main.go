@@ -14,6 +14,81 @@ import (
 	"github.com/phayes/freeport"
 )
 
+// testNotFound tests that the non-existing URL is handled correctly.
+func testNotFound(revproxyBinary string) error {
+	fmt.Println("Running testNotFound ...")
+
+	testDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return fmt.Errorf("failed to create a temporary directory: %s", err.Error())
+	}
+	defer os.RemoveAll(testDir)
+
+	port, err := freeport.GetFreePort()
+	if err != nil {
+		return fmt.Errorf("failed to acquire a free port: %s", err.Error())
+	}
+
+	cfgTxt := fmt.Sprintf(`
+{
+  "domain": "",
+  "ssl_key_path": "",
+  "letsencrypt_dir": "",
+  "https_address": "",
+  "http_address": ":%d",
+  "ssl_cert_path": "",
+  "routes": [],
+  "auths": {}
+}`, port)
+
+	cfgPth := filepath.Join(testDir, "config.json")
+	func() {
+		f, err := os.Create(cfgPth)
+		if err != nil {
+			panic(err.Error())
+		}
+		defer f.Close()
+
+		f.Write([]byte(cfgTxt))
+	}()
+
+	var procAttr os.ProcAttr
+	procAttr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
+
+	proc, err := os.StartProcess(
+		revproxyBinary,
+		[]string{revproxyBinary, "-config_path", cfgPth},
+		&os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}})
+
+	if err != nil {
+		return fmt.Errorf("failed to start the process: %s", err.Error())
+	}
+
+	exited := false
+	defer func() {
+		if !exited {
+			proc.Kill()
+		}
+	}()
+
+	fmt.Println("Sleeping to allow the server to start...")
+	time.Sleep(3 * time.Second)
+
+	url := fmt.Sprintf("http://@127.0.0.1:%d/some-nonexisting-url/", port)
+
+	response, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to fetch the directory listing: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusNotFound {
+		return fmt.Errorf("expected %d, got status code %d", http.StatusNotFound, response.StatusCode)
+	}
+
+	return nil
+}
+
 // testListDir tests that the directory is correctly listed.
 func testListDir(revproxyBinary string) error {
 	fmt.Println("Running testListDir ...")
@@ -380,7 +455,7 @@ func testBcryptHtpasswd(revproxyBinary string) error {
     }
   ],
   "auths": {
-    "some-user": {
+    "some-auth": {
       "username": "some-user",
       "password_hash": "$2y$10$iO/phN2PYP9kMTPmCrp/vOMjD5FI6yKqoJ/JzNjdwgJbGyL/RG07m"
     }
@@ -476,7 +551,13 @@ func run() int {
 		return 1
 	}
 
-	err := testListDir(*revproxyryBinary)
+	err := testNotFound(*revproxyryBinary)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "testNotFound failed: %s\n", err.Error())
+		return 1
+	}
+
+	err = testListDir(*revproxyryBinary)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "testListDir failed: %s\n", err.Error())
 		return 1
