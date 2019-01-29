@@ -75,7 +75,7 @@ go get -U github.com/Parquery/revproxyry
 ## Usage
 
 You start the revproxyry by pointing it to the configuration file (see 
-Section [Configuration](###Configuration)):
+Section [Configuration](#configuration)):
 
 ```bash
 revproxyry --config_path /path/to/some/configuration.json
@@ -103,7 +103,7 @@ format as a JSON object.
 
 The configuration file specifies the access and the routes of the reverse 
 proxying. If you want to start straight with an example, please jump to Section 
-[Example Configuration](####Example Configuration). Otherwise, here is a 
+[Example Configuration](#example-configuration). Otherwise, here is a 
 detailed list of the configuration properties:
 
 * `domain`: specifies the domain name of the machine.
