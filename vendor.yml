@@ -1,0 +1,7 @@
+vendors:
+- path: github.com/jimstudt/http-authentication
+  rev: 3eca13d6893afd7ecabe15f4445f5d2872a1b012
+- path: github.com/phayes/freeport
+  rev: 95f893ade6f232a5f1511d61735d89b1ae2df543
+- path: golang.org/x/crypto
+  rev: c7b33c32a30bae9ba07d37eb4d86f1f8b0f644fb
