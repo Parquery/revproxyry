@@ -1,5 +1,8 @@
 # Changlog
 
+## 1.0.6
+* Vendored the dependencies and updated them to the latest ones.
+
 ## 1.0.5
 * Root ("/") prefix is handled by revproxyry only if not specified in the configuration.
 
