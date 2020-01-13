@@ -4,4 +4,4 @@ vendors:
 - path: github.com/phayes/freeport
   rev: 95f893ade6f232a5f1511d61735d89b1ae2df543
 - path: golang.org/x/crypto
-  rev: c7b33c32a30bae9ba07d37eb4d86f1f8b0f644fb
+  rev: 61a87790db17894570dfb32dbaa0a4af9ce60cb4
