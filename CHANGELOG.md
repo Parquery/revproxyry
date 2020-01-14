@@ -1,5 +1,8 @@
 # Changlog
 
+## 1.0.7
+* Vendored the dependencies and updated them to the latest ones.
+
 ## 1.0.6
 * Vendored the dependencies and updated them to the latest ones.
 
