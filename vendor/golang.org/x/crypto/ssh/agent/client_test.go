@@ -8,11 +8,15 @@ import (
 	"bytes"
 	"crypto/rand"
 	"errors"
+	"io"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -33,17 +37,19 @@ func startOpenSSHAgent(t *testing.T) (client ExtendedAgent, socket string, clean
 	}
 
 	cmd := exec.Command(bin, "-s")
+	cmd.Env = []string{} // Do not let the user's environment influence ssh-agent behavior.
+	cmd.Stderr = new(bytes.Buffer)
 	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("cmd.Output: %v", err)
+		t.Fatalf("%s failed: %v\n%s", strings.Join(cmd.Args, " "), err, cmd.Stderr)
 	}
 
-	/* Output looks like:
+	// Output looks like:
+	//
+	//	SSH_AUTH_SOCK=/tmp/ssh-P65gpcqArqvH/agent.15541; export SSH_AUTH_SOCK;
+	//	SSH_AGENT_PID=15542; export SSH_AGENT_PID;
+	//	echo Agent pid 15542;
 
-		   SSH_AUTH_SOCK=/tmp/ssh-P65gpcqArqvH/agent.15541; export SSH_AUTH_SOCK;
-	           SSH_AGENT_PID=15542; export SSH_AGENT_PID;
-	           echo Agent pid 15542;
-	*/
 	fields := bytes.Split(out, []byte(";"))
 	line := bytes.SplitN(fields[0], []byte("="), 2)
 	line[0] = bytes.TrimLeft(line[0], "\n")
@@ -196,6 +202,63 @@ func testAgentInterface(t *testing.T, agent ExtendedAgent, key interface{}, cert
 
 }
 
+func TestMalformedRequests(t *testing.T) {
+	keyringAgent := NewKeyring()
+	listener, err := netListener()
+	if err != nil {
+		t.Fatalf("netListener: %v", err)
+	}
+	defer listener.Close()
+
+	testCase := func(t *testing.T, requestBytes []byte, wantServerErr bool) {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c, err := listener.Accept()
+			if err != nil {
+				t.Errorf("listener.Accept: %v", err)
+				return
+			}
+			defer c.Close()
+
+			err = ServeAgent(keyringAgent, c)
+			if err == nil {
+				t.Error("ServeAgent should have returned an error to malformed input")
+			} else {
+				if (err != io.EOF) != wantServerErr {
+					t.Errorf("ServeAgent returned expected error: %v", err)
+				}
+			}
+		}()
+
+		c, err := net.Dial("tcp", listener.Addr().String())
+		if err != nil {
+			t.Fatalf("net.Dial: %v", err)
+		}
+		_, err = c.Write(requestBytes)
+		if err != nil {
+			t.Errorf("Unexpected error writing raw bytes on connection: %v", err)
+		}
+		c.Close()
+		wg.Wait()
+	}
+
+	var testCases = []struct {
+		name          string
+		requestBytes  []byte
+		wantServerErr bool
+	}{
+		{"Empty request", []byte{}, false},
+		{"Short header", []byte{0x00}, true},
+		{"Empty body", []byte{0x00, 0x00, 0x00, 0x00}, true},
+		{"Short body", []byte{0x00, 0x00, 0x00, 0x01}, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) { testCase(t, tc.requestBytes, tc.wantServerErr) })
+	}
+}
+
 func TestAgent(t *testing.T) {
 	for _, keyType := range []string{"rsa", "dsa", "ecdsa", "ed25519"} {
 		testOpenSSHAgent(t, testPrivateKeys[keyType], nil, 0)
@@ -215,16 +278,25 @@ func TestCert(t *testing.T) {
 	testKeyringAgent(t, testPrivateKeys["rsa"], cert, 0)
 }
 
-// netPipe is analogous to net.Pipe, but it uses a real net.Conn, and
-// therefore is buffered (net.Pipe deadlocks if both sides start with
-// a write.)
-func netPipe() (net.Conn, net.Conn, error) {
+// netListener creates a localhost network listener.
+func netListener() (net.Listener, error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		listener, err = net.Listen("tcp", "[::1]:0")
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
+	}
+	return listener, nil
+}
+
+// netPipe is analogous to net.Pipe, but it uses a real net.Conn, and
+// therefore is buffered (net.Pipe deadlocks if both sides start with
+// a write.)
+func netPipe() (net.Conn, net.Conn, error) {
+	listener, err := netListener()
+	if err != nil {
+		return nil, nil, err
 	}
 	defer listener.Close()
 	c1, err := net.Dial("tcp", listener.Addr().String())
@@ -246,6 +318,8 @@ func TestServerResponseTooLarge(t *testing.T) {
 	if err != nil {
 		t.Fatalf("netPipe: %v", err)
 	}
+	done := make(chan struct{})
+	defer func() { <-done }()
 
 	defer a.Close()
 	defer b.Close()
@@ -256,9 +330,21 @@ func TestServerResponseTooLarge(t *testing.T) {
 
 	agent := NewClient(a)
 	go func() {
-		n, _ := b.Write(ssh.Marshal(response))
+		defer close(done)
+		n, err := b.Write(ssh.Marshal(response))
 		if n < 4 {
-			t.Fatalf("At least 4 bytes (the response size) should have been successfully written: %d < 4", n)
+			if runtime.GOOS == "plan9" {
+				if e1, ok := err.(*net.OpError); ok {
+					if e2, ok := e1.Err.(*os.PathError); ok {
+						switch e2.Err.Error() {
+						case "Hangup", "i/o on hungup channel":
+							// syscall.Pwrite returns -1 in this case even when some data did get written.
+							return
+						}
+					}
+				}
+			}
+			t.Errorf("At least 4 bytes (the response size) should have been successfully written: %d < 4: %v", n, err)
 		}
 	}()
 	_, err = agent.List()
@@ -444,14 +530,14 @@ func (r *keyringExtended) Extension(extensionType string, contents []byte) ([]by
 func TestAgentExtensions(t *testing.T) {
 	agent, _, cleanup := startOpenSSHAgent(t)
 	defer cleanup()
-	result, err := agent.Extension("my-extension@example.com", []byte{0x00, 0x01, 0x02})
+	_, err := agent.Extension("my-extension@example.com", []byte{0x00, 0x01, 0x02})
 	if err == nil {
 		t.Fatal("should have gotten agent extension failure")
 	}
 
 	agent, cleanup = startAgent(t, &keyringExtended{})
 	defer cleanup()
-	result, err = agent.Extension("my-extension@example.com", []byte{0x00, 0x01, 0x02})
+	result, err := agent.Extension("my-extension@example.com", []byte{0x00, 0x01, 0x02})
 	if err != nil {
 		t.Fatalf("agent extension failure: %v", err)
 	}
@@ -459,7 +545,7 @@ func TestAgentExtensions(t *testing.T) {
 		t.Fatalf("agent extension result invalid: %v", result)
 	}
 
-	result, err = agent.Extension("bad-extension@example.com", []byte{0x00, 0x01, 0x02})
+	_, err = agent.Extension("bad-extension@example.com", []byte{0x00, 0x01, 0x02})
 	if err == nil {
 		t.Fatal("should have gotten agent extension failure")
 	}
