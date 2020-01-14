@@ -403,7 +403,7 @@ func run() int {
 	flag.Parse()
 
 	if *version {
-		fmt.Println("1.0.6")
+		fmt.Println("1.0.7")
 		return 0
 	}
 
